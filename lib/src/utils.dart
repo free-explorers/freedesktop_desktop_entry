@@ -24,9 +24,9 @@ String expandEnvironmentVariables(String path) {
 }
 
 /// Filters out filesystem entities that don't exist.
-Stream<T> whereExists<T extends FileSystemEntity>(Iterable<T> entities) async* {
+Iterable<T> whereExists<T extends FileSystemEntity>(Iterable<T> entities) sync* {
   for (T entity in entities) {
-    if (await entity.exists()) {
+    if (entity.existsSync()) {
       yield entity;
     }
   }
@@ -57,7 +57,7 @@ Future<Map<String, FileSystemEntity>> getDirectoryContents(Stream<Directory> dir
 Future<Map<String, File>> getThemeFileHierarchy(String theme) async {
   Map<String, File> themeFiles = {};
 
-  await for (Directory themeDir in getThemeDirectories(theme)) {
+  for (Directory themeDir in getThemeDirectories(theme)) {
     List<MapEntry<String, File>> files = await themeDir.list(recursive: true).where((entity) => entity is File).map(
       (entity) {
         File file = entity as File;
@@ -70,10 +70,10 @@ Future<Map<String, File>> getThemeFileHierarchy(String theme) async {
   return themeFiles;
 }
 
-Stream<Directory> getThemeDirectories(String theme) async* {
+Iterable<Directory> getThemeDirectories(String theme) sync* {
   for (String baseDirectory in getIconBaseDirectories()) {
     final themeDir = Directory(path.join(baseDirectory, theme));
-    if (await themeDir.exists()) {
+    if (themeDir.existsSync()) {
       yield themeDir;
     }
   }

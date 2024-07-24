@@ -27,8 +27,8 @@ void main() {
   });
 
   test('icon name', () async {
-    final themes = FreedesktopIconThemes();
-    File? file = await themes.findIcon(
+    final theme = await FreedesktopIconTheme.loadTheme(theme: 'hicolor');
+    File? file = await theme.findIcon(
       IconQuery(
         name: 'input-touchpad',
         size: 32,
@@ -40,8 +40,8 @@ void main() {
   });
 
   test('absolute icon path', () async {
-    final themes = FreedesktopIconThemes();
-    File? file = await themes.findIcon(
+    final theme = await FreedesktopIconTheme.loadTheme(theme: 'hicolor');
+    File? file = await theme.findIcon(
       IconQuery(
         name: '/usr/share/icons/hicolor/32x32/devices/input-touchpad.png',
         size: 32, // doesn't matter

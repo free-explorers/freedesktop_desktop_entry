@@ -18,7 +18,7 @@ Future<Map<String, DesktopEntry>> parseAllInstalledDesktopFiles() async {
 
   List<Future<DesktopEntry>> futures = [];
 
-  await for (final Directory dir in whereExists(getApplicationDirectories().map(Directory.new))) {
+  for (final Directory dir in whereExists(getApplicationDirectories().map(Directory.new))) {
     await for (FileSystemEntity entity in dir.list()) {
       if (entity is File) {
         Future<DesktopEntry> desktopEntry = DesktopEntry.parseFile(entity.absolute);
