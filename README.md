@@ -71,8 +71,9 @@ String? frenchComment = desktopEntry.entries[DesktopEntryKey.comment.string]?.lo
 ### Find an icon
 
 ```dart
-final themes = FreedesktopIconThemes();
-File? file = await themes.findIcon(
+final themeList = await FreedesktopIconTheme.installedThemes;
+final theme = await FreedesktopIconTheme.loadTheme(theme: themeList.first);
+File? file = await theme.findIcon(
     IconQuery(
         name: 'firefox',
         size: 32,
@@ -82,11 +83,5 @@ File? file = await themes.findIcon(
 );
 ```
 
-The first time you do an icon lookup, all installed themes on your system will be indexed.
-If you want to preload the themes, call `FreedesktopIconThemes.loadThemes`.
-
-If new icons are installed, the next time you call `FreedesktopIconThemes.findIcon` it will index all themes once again
+If new icons are installed, the next time you call `FreedesktopIconThemes.findIcon` it will index the theme once again
 before returning you an icon.
-
-You can specify `preferredThemes` in `IconQuery`. This prioritizes the search to the list of theme names you've given before searching elsewhere.
-These theme names must be directory names, not user-visible names. For example `breeze-dark` and not `Breeze Dark`.
