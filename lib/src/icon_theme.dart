@@ -227,7 +227,7 @@ class FreedesktopIconTheme {
 }
 
 Future<_IconTheme> _indexTheme(String themeName) async {
-  final theme = await _parseIconTheme(themeName);
+  final theme = await _parseIconTheme(themeName, {});
   await _indexIconThemeIcons(theme!);
   return theme;
 }
@@ -290,7 +290,8 @@ Map<String, File> _indexFallbackIcons(
   return fallbackIcons;
 }
 
-Future<_IconTheme?> _parseIconTheme(String themeName) async {
+Future<_IconTheme?> _parseIconTheme(
+    String themeName, Set<String> parsedThemes) async {
   final themeFolders = FreedesktopIconTheme._baseDirectories
       .map((dir) => Directory('${dir.path}/$themeName'))
       .where((dir) => dir.existsSync());
@@ -306,16 +307,23 @@ Future<_IconTheme?> _parseIconTheme(String themeName) async {
 
   final themeDescription =
       await _parseIconThemeDescription(consideredThemeFolder.path);
-  return _IconTheme(
+  parsedThemes.add(themeName);
+
+  final parents = await themeDescription.parents
+      .whereNot((parentThemeName) => parsedThemes.contains(parentThemeName))
+      .map((parentThemeName) {
+        return _parseIconTheme(parentThemeName, parsedThemes);
+      })
+      .toList()
+      .wait;
+
+  final iconTheme = _IconTheme(
     name: themeName,
     description: themeDescription,
-    parents: (await themeDescription.parents
-            .map((themeName) => _parseIconTheme(themeName))
-            .toList()
-            .wait)
-        .nonNulls
-        .toList(),
+    parents: parents.nonNulls.toList(),
   );
+
+  return iconTheme;
 }
 
 class IconQuery extends Equatable {
