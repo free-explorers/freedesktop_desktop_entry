@@ -13,25 +13,47 @@ import 'utils.dart';
 
 part 'desktop_entry.freezed.dart';
 
-Future<Map<String, DesktopEntry>> parseAllInstalledDesktopFiles() async {
+Future<Map<String, DesktopEntry>> parseAllInstalledDesktopFiles() {
+  return parseDesktopFiles(getApplicationDirectories().map(Directory.new));
+}
+
+/// Parses every `.desktop` file found directly in [directories].
+///
+/// Directories that do not exist are skipped. If several directories contain a
+/// file with the same desktop-file id, the first directory wins, so callers
+/// should pass them in order of precedence.
+Future<Map<String, DesktopEntry>> parseDesktopFiles(
+  Iterable<Directory> directories,
+) async {
   Map<String, DesktopEntry> desktopEntries = {};
 
-  List<Future<DesktopEntry>> futures = [];
+  List<Future<DesktopEntry?>> futures = [];
 
-  for (final Directory dir in whereExists(getApplicationDirectories().map(Directory.new))) {
+  for (final Directory dir in whereExists(directories)) {
     await for (FileSystemEntity entity in dir.list()) {
       if (entity is File && entity.path.endsWith('.desktop')) {
-        Future<DesktopEntry> desktopEntry = DesktopEntry.parseFile(entity.absolute);
-        futures.add(desktopEntry);
+        futures.add(_parseDesktopFile(entity.absolute));
       }
     }
   }
 
-  for (DesktopEntry desktopEntry in await futures.wait) {
-    desktopEntries.putIfAbsent(desktopEntry.id!, () => desktopEntry);
+  for (DesktopEntry? desktopEntry in await futures.wait) {
+    if (desktopEntry != null) {
+      desktopEntries.putIfAbsent(desktopEntry.id!, () => desktopEntry);
+    }
   }
 
   return desktopEntries;
+}
+
+Future<DesktopEntry?> _parseDesktopFile(File file) async {
+  try {
+    return await DesktopEntry.parseFile(file);
+  } on FileSystemException {
+    // The file may vanish between being listed and being read, for example
+    // when a package upgrade replaces it. The next scan picks it up.
+    return null;
+  }
 }
 
 @freezed
